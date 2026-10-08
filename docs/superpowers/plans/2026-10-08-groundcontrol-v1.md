@@ -158,7 +158,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | Task | Title | Tests | Status | Commit |
 |---|---|---|---|---|
 | 1 | Scaffold, paths, types, test helpers | 2 | ☑ | e9f7b5d |
-| 2 | Config schema and loader | 14 | ☐ | |
+| 2 | Config schema and loader | 14 | ☑ | 243ad52 |
 | 3 | LogStore | 21 | ☐ | |
 | 4 | State file | 27 | ☐ | |
 | 5 | ProcessManager | 41 | ☐ | |
