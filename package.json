@@ -1,0 +1,47 @@
+{
+  "name": "groundcontrol-mcp",
+  "version": "0.1.0",
+  "description": "Persistent local dev-server orchestrator with an MCP bridge",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Er-Kalpesh/GroundControl.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Er-Kalpesh/GroundControl/issues"
+  },
+  "homepage": "https://github.com/Er-Kalpesh/GroundControl#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "groundcontrol": "dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@fastify/static": "^10.1.5",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "commander": "^15.0.0",
+    "fastify": "^5.12.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
