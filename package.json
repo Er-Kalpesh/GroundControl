@@ -8,7 +8,9 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build": "rm -rf dist && tsup"
+    "build": "rm -rf dist && tsup && npm run build:dashboard",
+    "build:dashboard": "npm --prefix dashboard run build",
+    "test:dashboard": "npm --prefix dashboard test"
   },
   "repository": {
     "type": "git",
