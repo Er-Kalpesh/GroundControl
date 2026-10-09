@@ -161,8 +161,8 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 2 | Config schema and loader | 14 | ☑ | 243ad52 |
 | 3 | LogStore | 21 | ☑ | 6d192c1 |
 | 4 | State file | 27 | ☑ | dca33fa |
-| 5 | ProcessManager | 41 | ☐ | |
-| 6 | Restart policy | 49 | ☐ | |
+| 5 | ProcessManager | 41 | ☑ | e3cee03 |
+| 6 | Restart policy | 49 | ☑ | e3cee03 |
 | 7 | Ports | 54 | ☐ | |
 | 8 | Health probes | 62 | ☐ | |
 | 9 | Task runner | 67 | ☐ | |
