@@ -174,7 +174,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 15 | Daemon, client, shell PATH | 123 | ☑ | 18f58f5 |
 | 16 | CLI | 138 | ☑ | 7943fa1 |
 | 17 | MCP bridge | 150 | ☑ | 01f878c |
-| 18 | Dashboard (separate suite: 12) | 150 + 12 | ☐ | |
+| 18 | Dashboard (separate suite: 12) | 150 + 12 | ☑ | 7e1e97f |
 | 19 | Packaging, CI, docs | 150 + 12 | ☐ | |
 | 20 | Final verification | 150 + 12 | ☐ | |
 
