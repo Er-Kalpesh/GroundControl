@@ -160,7 +160,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 1 | Scaffold, paths, types, test helpers | 2 | ☑ | e9f7b5d |
 | 2 | Config schema and loader | 14 | ☑ | 243ad52 |
 | 3 | LogStore | 21 | ☑ | 6d192c1 |
-| 4 | State file | 27 | ☐ | |
+| 4 | State file | 27 | ☑ | dca33fa |
 | 5 | ProcessManager | 41 | ☐ | |
 | 6 | Restart policy | 49 | ☐ | |
 | 7 | Ports | 54 | ☐ | |
