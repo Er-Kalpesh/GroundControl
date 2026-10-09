@@ -1,161 +1,158 @@
-# GroundControl: Comprehensive Product & Implementation Plan
+# GroundControl
 
-## 1. Executive Summary
-**GroundControl** is an AI-independent local development orchestration engine. It separates the "intelligence layer" (AI models like Claude, GPT, Gemini) from the "local execution layer" (your Mac running Node, PHP, Docker). By acting as an intermediary Process Manager that implements the **Model Context Protocol (MCP)**, GroundControl allows any AI to control your local development environment. Crucially, when the AI's quota is exhausted or the session ends, GroundControl keeps your applications running and accessible.
+**GroundControl keeps your dev servers running when your AI session ends.**
 
-## 2. The Problem & The Solution
-**The Problem:** Current AI coding assistants (Claude Code, Gemini CLI, Cursor) couple intelligence with execution. When the AI hits a rate limit or a session is closed, the underlying development servers (e.g., Laravel, Vite) often terminate, or the AI loses context of what is running.
-**The Solution:** A dual-layer architecture. 
-- **Layer 1 (The Executor):** A persistent background daemon (`GroundControl`) running on your machine that manages processes, databases, and watchers. It exposes a local API and dashboard.
-- **Layer 2 (The Intelligence):** Any AI agent connects to `GroundControl` via standard protocols (MCP) to request builds, start servers, or read logs.
+It is a small background daemon that owns your local processes (Laravel, Vite, Postgres in Docker, queue workers, ...), plus a CLI, a web dashboard and an [MCP](https://modelcontextprotocol.io) bridge. Any AI client (Claude, Cursor, Cline, Gemini, ...) can start, stop and read logs from the same persistent state, and so can you, without spending a single token.
 
-## 3. Core Benefits
-- **AI Quota Independence:** Your development environment doesn't crash when Claude or ChatGPT runs out of messages.
-- **Multi-AI Compatibility:** Because it uses MCP, you can seamlessly switch from Claude to Gemini to GPT; they all read from the same `GroundControl` state.
-- **Human-in-the-Loop:** A local web dashboard (e.g., `localhost:9876`) allows you to view logs, restart servers, and run tasks manually without burning AI tokens for basic orchestration.
-- **Persistent Context:** The AI can query `GroundControl` to instantly understand what services are currently running, on what ports, and what their recent logs say.
+## The problem
 
-## 4. How GroundControl Differs from Cline, Continue.dev, Cursor, and Claude Desktop
-To understand GroundControl, we must distinguish between the **Brain** and the **Hands**:
+AI coding tools couple *intelligence* with *execution*. When the tool hits a rate limit, crashes, or you close the window, the terminal it opened dies and so do your servers. The next AI session has no idea what was running.
 
-* **Cline, Continue.dev, Cursor, Claude:** These are the **Brains** (AI Clients). Their job is to read your prompts, generate code, and figure out *what* commands need to be run. 
-* **GroundControl:** This is the **Hands** (Infrastructure Engine). Its job is to actually *run* the commands, keep the servers alive in the background, and store the logs. GroundControl does *not* generate code or chat with you.
+## The solution: brain and hands
 
-**The Current Ecosystem (Without GroundControl):**
-If you tell Cline (inside VS Code) to start your Laravel server, Cline opens a terminal tab in VS Code and runs `php artisan serve`. 
-*Problem:* If you close VS Code, or if Cline crashes, the terminal dies, and your Laravel server goes offline. The intelligence is coupled to the execution.
-
-**The Ecosystem With GroundControl:**
-If you tell Cline to start your Laravel server, Cline uses the **MCP protocol** to send a message to GroundControl: *"Hey GroundControl, please start Laravel."*
-*Result:* GroundControl starts Laravel in its own persistent background daemon. You can now completely close VS Code and shut down Cline. GroundControl keeps Laravel running. You can open your browser to `localhost:9876` and manage it manually. Later, you can open Antigravity, and it can ask GroundControl: *"What is currently running?"* and instantly take over where Cline left off.
-
-## 5. Operations You Can Perform Without AI (Zero Token Usage)
-Because GroundControl has its own CLI and Local Web Dashboard (`localhost:9876`), it operates as a fully functional developer tool on its own. You can perform the following tasks manually, saving your AI tokens for actual coding problems:
-
-1. **Environment Bootstrapping:** Boot up your Laravel API, React frontend, and Dockerized PostgreSQL simultaneously via the UI or by typing `groundcontrol start`. No need to prompt an AI to do this.
-2. **Log Monitoring & Diagnostics:** View real-time terminal output (`stdout`/`stderr`), CPU, and memory usage for each service directly in the dashboard.
-3. **Routine Task Execution:** Click a button in the UI to run frequent tasks like `php artisan migrate`, `npm run build`, or `phpunit` without wasting tokens asking an AI to type it out.
-4. **Zombie Port Management:** Instantly see if a process is blocking port 8000 or 5173, and kill the process with a single click.
-5. **Fast Restarts:** If a Node service crashes due to an out-of-memory error, simply click "Restart" in the UI rather than writing an AI prompt saying, *"My server crashed, please restart it."*
-
-## 6. User Stories
-
-### Human Developer Stories
-1. **As a developer**, I want to define a `groundcontrol.json` in my project so that a single command starts my Laravel API, Vite frontend, and PostgreSQL database.
-2. **As a developer**, I want a local dashboard (`localhost:9876`) to see the CPU/Memory usage and logs of my running services so I don't have to manage multiple terminal tabs.
-3. **As a developer**, I want my dev servers to keep running even if I close my AI IDE or my AI CLI tool crashes.
-
-### AI Agent Stories (Via MCP)
-4. **As an AI Agent**, I want to call `start_service("frontend")` and receive a success confirmation without blocking my event loop, so I can continue reasoning.
-5. **As an AI Agent**, I want to call `get_logs("laravel-api")` to diagnose why an endpoint is returning a 500 error.
-6. **As an AI Agent**, I want to call `run_task("php artisan migrate")` and get the standard output and exit code to ensure the database is ready before writing frontend code.
-
-## 7. System Architecture
+| | Brain (AI clients) | Hands (GroundControl) |
+|---|---|---|
+| Examples | Claude, Cursor, Cline, Continue, Gemini | the GroundControl daemon |
+| Job | decide *what* to run, write code | run it, keep it alive, remember its logs |
+| Lifetime | one session | until you stop it |
 
 ```mermaid
-flowchart TD
-    subgraph AIs ["Intelligence Layer (AI Brains)"]
-        AGY["Antigravity / Gemini"]
-        CL["Claude Desktop / Code"]
-        CUR["Cursor / Cline / Continue"]
+flowchart LR
+    subgraph AI["AI clients (brains)"]
+        C1[Claude]; C2[Cursor / Cline]; C3[Gemini]
     end
-
-    subgraph LD ["GroundControl Orchestrator (Node.js Daemon)"]
-        MCP["MCP Server (stdio)"]
-        API["REST API (HTTP)"]
-        DASH["Web Dashboard (React)"]
-        PM["Process Manager Engine"]
-        REG["State Registry (In-Memory/SQLite)"]
-        
-        MCP <--> PM
-        API <--> PM
-        API <--> DASH
-        PM <--> REG
+    subgraph Bridge["per-client, disposable"]
+        M["groundcontrol mcp-server<br/>(stdio, holds no state)"]
     end
-    
-    subgraph Services ["Execution Layer (Your Mac)"]
-        LAR["Laravel (Port: 8000)"]
-        VITE["React/Vite (Port: 5173)"]
-        DB["PostgreSQL/Docker"]
+    subgraph D["GroundControl daemon (persistent)"]
+        API["HTTP API 127.0.0.1:9876<br/>token + Host/Origin checks"]
+        O[Orchestrator] --- PM[Process manager]
+        DASH[Dashboard]
     end
-
-    AIs -- "Tool Calls via MCP" --> MCP
-    User -- "Views Dashboard" --> DASH
-    PM -- "Spawns & Monitors" --> LAR
-    PM -- "Spawns & Monitors" --> VITE
-    PM -- "Spawns & Monitors" --> DB
+    subgraph S["Your services (detached, own process groups)"]
+        L[Laravel]; V[Vite]; P[Postgres]
+    end
+    C1 & C2 & C3 --> M --> API
+    CLI[groundcontrol CLI] --> API
+    Browser --> DASH --> API
+    API --> O
+    PM -. spawns .-> L & V & P
 ```
 
-## 8. Technical Stack
-- **Core Runtime:** Node.js (TypeScript)
-- **Process Management:** `node:child_process` (with `tree-kill` for clean teardowns) or a lightweight wrapper around PM2.
-- **AI Integration Protocol:** `@modelcontextprotocol/sdk` (Official MCP SDK).
-- **Local API/Web Server:** Fastify or Express.js.
-- **Dashboard UI:** React (Vite) + TailwindCSS (compiled into a single static bundle served by the Node server).
-- **CLI Tooling:** Commander.js or Oclif (for the `groundcontrol` terminal command).
+Why this works: the MCP server is only a **thin bridge**. It dies with the AI client, but the daemon and the services do not. Services are started in their own process groups with output written straight to log files, so even the daemon can restart and **re-adopt** them.
 
-## 9. Implementation Roadmap
-
-### Phase 1: The Core Process Engine & CLI (Weeks 1-2)
-- Initialize the TypeScript Node.js project.
-- Implement the `ProcessManager` class capable of spawning, monitoring, and gracefully killing background tasks.
-- Capture `stdout` and `stderr` streams, storing the last 1000 lines in memory for quick retrieval.
-- Implement a basic CLI: `groundcontrol start`, `groundcontrol stop`, `groundcontrol status`.
-- Support reading a `groundcontrol.json` file in the current working directory to define services.
-
-### Phase 2: AI Integration via MCP Server (Week 3)
-- Integrate `@modelcontextprotocol/sdk`.
-- Expose the following MCP Tools:
-  - `groundcontrol_start_service(name, command, cwd)`
-  - `groundcontrol_stop_service(id)`
-  - `groundcontrol_get_status()`
-  - `groundcontrol_get_logs(id, lines)`
-  - `groundcontrol_run_task(command, cwd)` (for blocking, one-off commands like migrations).
-- Test integration locally with Claude Desktop and Antigravity.
-
-### Phase 3: REST API & Web Dashboard (Week 4)
-- Spin up a local Fastify server on a dedicated port (e.g., `9876`).
-- Expose REST endpoints that map directly to the `ProcessManager` methods.
-- Build a lightweight React Single Page Application (SPA).
-- Provide real-time log streaming to the dashboard using Server-Sent Events (SSE) or WebSockets.
-
-### Phase 4: Advanced Features & Robustness (Week 5)
-- **Port Conflict Detection:** Automatically detect if port 8000 is in use before starting Laravel, and optionally prompt to kill the zombie process.
-- **Health Checks:** Allow services in `groundcontrol.json` to define a health check URL (e.g., `http://localhost:8000/up`). The engine waits until the health check passes before marking the service as "Ready".
-- **Daemonization:** Ensure GroundControl itself can run as a background daemon on Mac (using `launchd` or `pm2`) so it survives terminal closure.
-
-### Phase 5: Packaging & Deployment (Week 6)
-- Compile the TypeScript code into a standalone binary using `pkg` or bundle it strictly for `npm`.
-- Bundle the compiled React dashboard inside the NPM package so no separate frontend installation is required.
-- Publish to the public NPM registry.
-
-## 10. Deployment & Distribution Strategy
-Once complete, developers will install GroundControl globally:
+## Install
 
 ```bash
 npm install -g groundcontrol-mcp
 ```
 
-**Using as a Developer (No AI Needed):**
-The developer navigates to their project and runs:
+Requires Node 20+ on macOS or Linux (`lsof` and `ps` must exist).
+
+## Quick start
+
 ```bash
-groundcontrol ui
+cd my-project
+groundcontrol init        # writes groundcontrol.json (detects Laravel / Vite / docker compose)
+groundcontrol start       # starts services in dependency order, waits until each is ready
+groundcontrol ui          # opens the dashboard
 ```
-This starts the background daemon (if not running), reads `groundcontrol.json`, starts the services, and opens the dashboard in the browser.
 
-**Installing into AI Assistants (Claude, Antigravity, Cline, Cursor):**
-To give an AI access to the environment, the user adds the MCP server to their AI config. Because MCP is a universal standard, this works across almost all modern AI tools.
+Close your terminal, your editor and your AI client. Your servers keep running.
 
-*(Example Claude Desktop `claude_desktop_config.json`)*
+### `groundcontrol.json`
+
 ```json
 {
-  "mcpServers": {
-    "groundcontrol": {
-      "command": "groundcontrol",
-      "args": ["mcp-server"]
-    }
-  }
+  "version": 1,
+  "project": "my-app",
+  "services": {
+    "db":  { "command": "docker compose up postgres", "stopCommand": "docker compose stop postgres",
+             "health": { "type": "tcp", "port": 5432 } },
+    "api": { "command": "php artisan serve --port=8000", "port": 8000, "dependsOn": ["db"],
+             "health": { "type": "http", "url": "http://localhost:8000/up" },
+             "restart": { "policy": "on-failure", "maxRetries": 5 } },
+    "web": { "command": "npm run dev", "cwd": "frontend", "port": 5173, "dependsOn": ["api"],
+             "health": { "type": "log", "pattern": "Local:\\s+http" } }
+  },
+  "tasks": {
+    "migrate": { "command": "php artisan migrate --force", "timeoutMs": 120000 },
+    "test":    { "command": "vendor/bin/phpunit" }
+  },
+  "policy": { "allowArbitraryTasks": false }
 }
 ```
 
-From that moment on, whenever the user says *"Build the Laravel application and keep it running"*, the AI routes the command through the MCP server to the persistent GroundControl daemon.
+Full reference: [docs/config.md](docs/config.md).
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `groundcontrol init [--force]` | create a starter `groundcontrol.json` |
+| `groundcontrol start [service...] [--kill-zombies]` | start services (plus dependencies) in order |
+| `groundcontrol stop [service...]` | stop services (all when none given) |
+| `groundcontrol restart <service>` | restart one service |
+| `groundcontrol status` | state, pid, port, CPU, memory, uptime |
+| `groundcontrol logs <service> [-n 100] [-f]` | recent or live logs |
+| `groundcontrol run <task-or-command>` | run a declared task, or any command (you are a human) |
+| `groundcontrol ports <port> [--kill]` | who holds a port; free it |
+| `groundcontrol ui [--no-open]` | open the dashboard |
+| `groundcontrol doctor` | diagnose your environment |
+| `groundcontrol daemon start\|stop\|status [--with-services]` | manage the daemon (stopping it leaves services running) |
+| `groundcontrol daemon install\|uninstall` | start the daemon at login (macOS launchd) |
+| `groundcontrol mcp-server` | the MCP stdio bridge |
+
+Every command accepts `--json`.
+
+## Connect an AI client (MCP)
+
+**Claude Code**
+
+```bash
+claude mcp add groundcontrol -- groundcontrol mcp-server
+```
+
+**Claude Desktop** (`claude_desktop_config.json`), **Cursor**, **Cline**, and other MCP clients:
+
+```json
+{ "mcpServers": { "groundcontrol": { "command": "groundcontrol", "args": ["mcp-server"] } } }
+```
+
+If the client cannot find `groundcontrol`, use the absolute path from `which groundcontrol`.
+
+Tools the AI gets: `groundcontrol_get_status`, `groundcontrol_get_logs`, `groundcontrol_start_service`, `groundcontrol_stop_service`, `groundcontrol_restart_service`, `groundcontrol_list_tasks`, `groundcontrol_run_task`. Output is capped at 20,000 characters, log reads are incremental (`since`), and starting a service never blocks.
+
+## Security model
+
+GroundControl can run commands on your machine, so the API is locked down. Summary (details in [docs/security.md](docs/security.md)):
+
+- Listens on `127.0.0.1` only.
+- Every API call needs a random token stored in `~/.groundcontrol/token` (mode 0600).
+- `Host` and `Origin` headers are checked, which blocks DNS-rebinding and cross-site requests from web pages.
+- **AI callers can only run tasks you declared** in `groundcontrol.json`. Arbitrary commands need `policy.allowArbitraryTasks: true`.
+- Only humans can kill processes by port.
+- Every action is recorded with who did it (human, which AI, or system) in `~/.groundcontrol/audit.log` and shown in the dashboard.
+
+## What survives what
+
+| If this stops... | Your services | The daemon |
+|---|---|---|
+| AI client / MCP server | keep running | keeps running |
+| Terminal / editor | keep running | keeps running |
+| The daemon (`daemon stop`, crash, upgrade) | **keep running** | restarts and re-adopts them |
+| `groundcontrol stop` | stop | keeps running |
+| Reboot | stopped, unless `daemon install` is used and the service has `"autostart": true` | starts at login |
+
+## Development
+
+```bash
+npm install && npm --prefix dashboard install
+npm run typecheck && npm test      # unit + end-to-end tests (builds first)
+npm run build                      # dist/ (cli, daemon, mcp) + dist/dashboard
+npm --prefix dashboard test        # dashboard component tests
+```
+
+## License
+
+MIT

@@ -10,13 +10,19 @@
     "typecheck": "tsc --noEmit",
     "build": "rm -rf dist && tsup && npm run build:dashboard",
     "build:dashboard": "npm --prefix dashboard run build",
-    "test:dashboard": "npm --prefix dashboard test"
+    "test:dashboard": "npm --prefix dashboard test",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Er-Kalpesh/GroundControl.git"
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "dev-server",
+    "process-manager",
+    "ai"
+  ],
   "author": "",
   "license": "MIT",
   "type": "module",
