@@ -172,7 +172,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 13 | Orchestrator | 94 | ☑ | c6bdbff |
 | 14 | HTTP server | 111 | ☑ | 727cdbb |
 | 15 | Daemon, client, shell PATH | 123 | ☑ | 18f58f5 |
-| 16 | CLI | 138 | ☐ | |
+| 16 | CLI | 138 | ☑ | 7943fa1 |
 | 17 | MCP bridge | 150 | ☐ | |
 | 18 | Dashboard (separate suite: 12) | 150 + 12 | ☐ | |
 | 19 | Packaging, CI, docs | 150 + 12 | ☐ | |
