@@ -175,7 +175,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 16 | CLI | 138 | ☑ | 7943fa1 |
 | 17 | MCP bridge | 150 | ☑ | 01f878c |
 | 18 | Dashboard (separate suite: 12) | 150 + 12 | ☑ | 7e1e97f |
-| 19 | Packaging, CI, docs | 150 + 12 | ☐ | |
+| 19 | Packaging, CI, docs | 150 + 12 | ☑ | 256cb83 |
 | 20 | Final verification | 150 + 12 | ☐ | |
 
 ### I. Time estimate
