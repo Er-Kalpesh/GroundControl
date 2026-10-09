@@ -166,7 +166,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 7 | Ports | 54 | ☑ | 7b94a3e |
 | 8 | Health probes | 62 | ☑ | 59bcf82 |
 | 9 | Task runner | 67 | ☑ | d8a8df9 |
-| 10 | Metrics | 69 | ☐ | |
+| 10 | Metrics | 69 | ☑ | 0ac4046 |
 | 11 | Audit log | 71 | ☐ | |
 | 12 | Security | 82 | ☐ | |
 | 13 | Orchestrator | 94 | ☐ | |
