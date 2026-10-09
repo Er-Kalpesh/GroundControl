@@ -170,7 +170,7 @@ A test that passes only sometimes is a bug: run it 20 times (`for i in $(seq 20)
 | 11 | Audit log | 71 | ☑ | fcf9605 |
 | 12 | Security | 82 | ☑ | 6d46703 |
 | 13 | Orchestrator | 94 | ☑ | c6bdbff |
-| 14 | HTTP server | 111 | ☐ | |
+| 14 | HTTP server | 111 | ☑ | 727cdbb |
 | 15 | Daemon, client, shell PATH | 123 | ☐ | |
 | 16 | CLI | 138 | ☐ | |
 | 17 | MCP bridge | 150 | ☐ | |
