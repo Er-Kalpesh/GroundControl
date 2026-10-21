@@ -4981,7 +4981,7 @@ Decisions already made (do not re-litigate; change only with a recorded reason):
 
 Deviations recorded during execution (append here; format `date, task, what, why`):
 
-- (none yet)
+- 2026-10-21, release prep: minimum Node raised from 20 to 22.12. `commander@15` (a runtime dependency) and `vitest@5`/`jsdom@30` require Node >= 22.12, CI failed on Node 20, and Node 20 is end-of-life. Updated `package.json` engines, `tsup` target, `doctor`, README and the CI matrix (22, 24). Earlier mentions of Node 20 in this plan are superseded.
 
 ## Appendix E: Command cheat-sheet
 

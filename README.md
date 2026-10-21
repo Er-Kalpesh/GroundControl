@@ -3,7 +3,7 @@
 [![CI](https://github.com/Er-Kalpesh/GroundControl/actions/workflows/ci.yml/badge.svg)](https://github.com/Er-Kalpesh/GroundControl/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/groundcontrol-mcp.svg)](https://www.npmjs.com/package/groundcontrol-mcp)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![node >=20](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
+[![node >=22.12](https://img.shields.io/badge/node-%3E%3D22.12-brightgreen.svg)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-server-8A2BE2.svg)](https://modelcontextprotocol.io)
 
 **GroundControl keeps your dev servers running when your AI session ends.**
@@ -49,7 +49,7 @@ Why this works: the MCP server is only a **thin bridge**. It dies with the AI cl
 
 ## Install
 
-**You need:** macOS or Linux, Node 20+, and the standard `lsof` and `ps` tools (both are preinstalled on macOS and most Linux systems). Linux is built and tested by CI but has had less real-world use than macOS.
+**You need:** macOS or Linux, Node 22.12 or newer (Node 20 is end-of-life and not supported), and the standard `lsof` and `ps` tools (both are preinstalled on macOS and most Linux systems). Linux is built and tested by CI but has had less real-world use than macOS.
 
 ```bash
 npm install -g groundcontrol-mcp     # installs the `groundcontrol` command
@@ -159,7 +159,7 @@ GroundControl ships two things an AI can use: the **MCP server** (the tools) and
 /plugin install groundcontrol@groundcontrol
 ```
 
-The plugin registers the MCP server (it runs `npx -y groundcontrol-mcp mcp-server`, so Node 20+ is the only requirement) and adds the `groundcontrol` skill. Install the CLI too (`npm install -g groundcontrol-mcp`) to use `groundcontrol init`, `start` and `ui` yourself.
+The plugin registers the MCP server (it runs `npx -y groundcontrol-mcp mcp-server`, so Node 22.12+ is the only requirement) and adds the `groundcontrol` skill. Install the CLI too (`npm install -g groundcontrol-mcp`) to use `groundcontrol init`, `start` and `ui` yourself.
 
 ### Option 2: MCP server only (any MCP client)
 

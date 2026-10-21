@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/Er-Kalpesh/GroundControl#readme",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "bin": {
     "groundcontrol": "dist/cli/index.js",

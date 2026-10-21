@@ -11,8 +11,8 @@ const has = (cmd: string, args: string[]) => { try { execFileSync(cmd, args, { s
 /** Environment diagnostics. `client` may be null when the daemon is not running. */
 export async function runDoctor(cwd: string, client: GcClient | null, daemonUp: boolean): Promise<Check[]> {
   const out: Check[] = [];
-  const major = Number(process.versions.node.split('.')[0]);
-  out.push({ name: 'node >= 20', ok: major >= 20, detail: process.versions.node });
+  const [major = 0, minor = 0] = process.versions.node.split('.').map(Number);
+  out.push({ name: 'node >= 22.12', ok: major > 22 || (major === 22 && minor >= 12), detail: process.versions.node });
   out.push({ name: 'lsof available', ok: has('lsof', ['-v']) || has('lsof', ['-h']), detail: 'needed for port detection' });
   out.push({ name: 'ps available', ok: has('ps', ['-o', 'pid=', '-p', String(process.pid)]), detail: 'needed for metrics and pid-reuse protection' });
   const p = paths();
