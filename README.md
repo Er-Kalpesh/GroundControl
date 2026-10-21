@@ -1,5 +1,11 @@
 # GroundControl
 
+[![CI](https://github.com/Er-Kalpesh/GroundControl/actions/workflows/ci.yml/badge.svg)](https://github.com/Er-Kalpesh/GroundControl/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/groundcontrol-mcp.svg)](https://www.npmjs.com/package/groundcontrol-mcp)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![node >=20](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
+[![MCP](https://img.shields.io/badge/MCP-server-8A2BE2.svg)](https://modelcontextprotocol.io)
+
 **GroundControl keeps your dev servers running when your AI session ends.**
 
 It is a small background daemon that owns your local processes (Laravel, Vite, Postgres in Docker, queue workers, ...), plus a CLI, a web dashboard and an [MCP](https://modelcontextprotocol.io) bridge. Any AI client (Claude, Cursor, Cline, Gemini, ...) can start, stop and read logs from the same persistent state, and so can you, without spending a single token.
