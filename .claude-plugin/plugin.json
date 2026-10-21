@@ -1,0 +1,10 @@
+{
+  "name": "groundcontrol",
+  "version": "0.1.0",
+  "description": "Keep dev servers running when your AI session ends. Start, stop and read logs of local services through a persistent daemon, with a skill that teaches the AI how to use it safely.",
+  "author": { "name": "Kalpesh Thakkar" },
+  "homepage": "https://github.com/Er-Kalpesh/GroundControl",
+  "repository": "https://github.com/Er-Kalpesh/GroundControl",
+  "license": "MIT",
+  "keywords": ["mcp", "dev-server", "process-manager", "laravel", "vite", "docker", "logs"]
+}

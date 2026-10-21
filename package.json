@@ -23,7 +23,7 @@
     "process-manager",
     "ai"
   ],
-  "author": "",
+  "author": "Kalpesh Thakkar",
   "license": "MIT",
   "type": "module",
   "bugs": {
@@ -34,7 +34,8 @@
     "node": ">=20"
   },
   "bin": {
-    "groundcontrol": "dist/cli/index.js"
+    "groundcontrol": "dist/cli/index.js",
+    "groundcontrol-mcp": "dist/cli/index.js"
   },
   "files": [
     "dist"
@@ -51,5 +52,8 @@
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

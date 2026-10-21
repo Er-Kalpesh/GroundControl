@@ -43,24 +43,61 @@ Why this works: the MCP server is only a **thin bridge**. It dies with the AI cl
 
 ## Install
 
+**You need:** macOS or Linux, Node 20+, and the standard `lsof` and `ps` tools (both are preinstalled on macOS and most Linux systems). Linux is built and tested by CI but has had less real-world use than macOS.
+
 ```bash
-npm install -g groundcontrol-mcp
+npm install -g groundcontrol-mcp     # installs the `groundcontrol` command
+groundcontrol doctor                 # checks your environment; every line should start with "ok"
 ```
 
-Requires Node 20+ on macOS or Linux (`lsof` and `ps` must exist).
-
-## Quick start
+## Set up a project (3 steps)
 
 ```bash
 cd my-project
-groundcontrol init        # writes groundcontrol.json (detects Laravel / Vite / docker compose)
-groundcontrol start       # starts services in dependency order, waits until each is ready
-groundcontrol ui          # opens the dashboard
+groundcontrol init        # 1. writes groundcontrol.json (detects Laravel, Vite/npm, docker compose)
+#    open groundcontrol.json and check the commands, ports and dependsOn; add health checks if you like
+groundcontrol start       # 2. starts every service in dependency order and waits until each is ready
+groundcontrol ui          # 3. opens the dashboard in your browser
 ```
 
-Close your terminal, your editor and your AI client. Your servers keep running.
+Now close your terminal, your editor and your AI client. Your servers keep running.
 
-### `groundcontrol.json`
+## What to expect
+
+**The first time you run a command**
+- A small background daemon starts by itself. It listens only on `127.0.0.1:9876` (this computer, nothing else) and you do not need to manage it. The very first start can take up to about 20 seconds while GroundControl reads your shell's PATH (so `php`, `npm` and `docker` are found); later starts are instant.
+- It creates `~/.groundcontrol/` with: `token` (the API password, readable only by you), `state.json` (which processes it manages), `logs/` (one log file per service), `audit.log` (who did what), `projects.json`, `shell-path` and `daemon.log`.
+
+**When you run `groundcontrol start`**
+- Services start in the order of their `dependsOn` and the next one waits until the previous is `ready` (its health check passed). You get a table with state, pid, port, CPU, memory and uptime.
+- If a port is already used by something else, nothing is started and you are told which program holds it; add `--kill-zombies` to stop that program, or free the port yourself.
+- If a service fails to become ready or crashes, the command exits with an error and the reason; services that already started keep running.
+
+**When an AI is connected**
+- It can see status, read logs, start, stop and restart services, and run the tasks you listed under `tasks` in `groundcontrol.json`. It **cannot** run other commands or kill processes by port, unless you explicitly set `"allowArbitraryTasks": true`.
+- Everything it does is recorded in the dashboard's Activity tab as `ai:<client name>`, next to your own actions.
+- When the AI session ends or runs out of quota, nothing happens to your servers.
+
+**What survives what:** see the table in "What survives what" below. In short: closing the AI, the terminal or the editor never stops your services, and neither does stopping or restarting the daemon.
+
+**What GroundControl does not do**
+- It does not write code or talk to any AI model itself, has no cloud component, and sends no telemetry.
+- It does not open any network port except `127.0.0.1:9876`.
+- It does not restart your services after a reboot unless you run `groundcontrol daemon install` (macOS) and the service has `"autostart": true`.
+- Resource use is small: one idle Node process plus the services you asked it to run.
+
+**If something looks wrong:** run `groundcontrol doctor`, then check `~/.groundcontrol/daemon.log` and `groundcontrol logs <service>`.
+
+**To remove it completely**
+
+```bash
+groundcontrol daemon stop --with-services   # stop the daemon and every service it runs
+groundcontrol daemon uninstall              # macOS only: remove the login item, if you installed it
+npm uninstall -g groundcontrol-mcp
+rm -rf ~/.groundcontrol                     # deletes the token, logs and state
+```
+
+## The `groundcontrol.json` file
 
 ```json
 {
@@ -105,23 +142,42 @@ Full reference: [docs/config.md](docs/config.md).
 
 Every command accepts `--json`.
 
-## Connect an AI client (MCP)
+## Connect an AI client
+
+GroundControl ships two things an AI can use: the **MCP server** (the tools) and a **skill** (short instructions that teach the AI the safe workflow). Pick the option that fits your client.
+
+### Option 1: Claude Code plugin (MCP server + skill, one step)
+
+```
+/plugin marketplace add Er-Kalpesh/GroundControl
+/plugin install groundcontrol@groundcontrol
+```
+
+The plugin registers the MCP server (it runs `npx -y groundcontrol-mcp mcp-server`, so Node 20+ is the only requirement) and adds the `groundcontrol` skill. Install the CLI too (`npm install -g groundcontrol-mcp`) to use `groundcontrol init`, `start` and `ui` yourself.
+
+### Option 2: MCP server only (any MCP client)
 
 **Claude Code**
 
 ```bash
-claude mcp add groundcontrol -- groundcontrol mcp-server
+claude mcp add groundcontrol -- npx -y groundcontrol-mcp mcp-server
 ```
 
 **Claude Desktop** (`claude_desktop_config.json`), **Cursor**, **Cline**, and other MCP clients:
 
 ```json
-{ "mcpServers": { "groundcontrol": { "command": "groundcontrol", "args": ["mcp-server"] } } }
+{ "mcpServers": { "groundcontrol": { "command": "npx", "args": ["-y", "groundcontrol-mcp", "mcp-server"] } } }
 ```
 
-If the client cannot find `groundcontrol`, use the absolute path from `which groundcontrol`.
+If you installed globally you can use `"command": "groundcontrol", "args": ["mcp-server"]` instead. If a GUI client cannot find `npx` or `groundcontrol`, use the absolute path from `which npx` / `which groundcontrol`.
 
-Tools the AI gets: `groundcontrol_get_status`, `groundcontrol_get_logs`, `groundcontrol_start_service`, `groundcontrol_stop_service`, `groundcontrol_restart_service`, `groundcontrol_list_tasks`, `groundcontrol_run_task`. Output is capped at 20,000 characters, log reads are incremental (`since`), and starting a service never blocks.
+### Option 3: skill only
+
+Copy [`skills/groundcontrol/`](skills/groundcontrol/SKILL.md) into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project). The skill needs the MCP server from Option 2 to be connected. For clients without skills support, paste the "Workflow" and "Rules" sections of that file into your rules file (`AGENTS.md`, `.cursorrules`, ...).
+
+### What the AI can do
+
+Tools: `groundcontrol_get_status`, `groundcontrol_get_logs`, `groundcontrol_start_service`, `groundcontrol_stop_service`, `groundcontrol_restart_service`, `groundcontrol_list_tasks`, `groundcontrol_run_task`. Output is capped at 20,000 characters, log reads are incremental (`since`), and starting a service never blocks. The AI can only run tasks you declared in `groundcontrol.json`.
 
 ## Security model
 

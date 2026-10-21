@@ -1,0 +1,16 @@
+{
+  "name": "groundcontrol",
+  "owner": { "name": "Kalpesh Thakkar" },
+  "metadata": { "description": "GroundControl: a persistent local dev-server daemon with an MCP bridge", "version": "0.1.0" },
+  "plugins": [
+    {
+      "name": "groundcontrol",
+      "source": "./",
+      "description": "Keep dev servers running when your AI session ends; MCP tools plus a skill for using them safely.",
+      "version": "0.1.0",
+      "author": { "name": "Kalpesh Thakkar" },
+      "keywords": ["mcp", "dev-server", "process-manager"],
+      "category": "development"
+    }
+  ]
+}

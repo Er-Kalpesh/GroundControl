@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "groundcontrol": {
+      "command": "npx",
+      "args": ["-y", "groundcontrol-mcp", "mcp-server"]
+    }
+  }
+}
