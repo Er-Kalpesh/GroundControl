@@ -53,8 +53,10 @@ Why this works: the MCP server is only a **thin bridge**. It dies with the AI cl
 
 ```bash
 npm install -g groundcontrol-mcp     # installs the `groundcontrol` command
-groundcontrol doctor                 # checks your environment; every line should start with "ok"
+groundcontrol doctor                 # checks your environment; lines start with "ok" (a "warn" is normal before your first run)
 ```
+
+Without npm (from a GitHub release; available once a version tag has been published): `npm install -g https://github.com/Er-Kalpesh/GroundControl/releases/download/v0.1.0/groundcontrol-mcp-0.1.0.tgz`. Installing straight from the repository (`npm install github:...`) is **not** supported, because the build output is not committed.
 
 ## Set up a project (3 steps)
 

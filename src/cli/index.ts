@@ -145,8 +145,8 @@ program.command('doctor').description('diagnose the environment')
     const up = await probe.health();
     const client = up && existsSync(paths().token) ? new GcClient({ port: defaultPort(), token: readToken(), actor: 'human:cli' }) : null;
     const checks = await runDoctor(process.cwd(), client, up);
-    out(checks.map(c => `${c.ok ? 'ok  ' : 'FAIL'}  ${c.name} — ${c.detail}`).join('\n'), { checks });
-    if (checks.some(c => !c.ok && c.name !== 'daemon reachable')) process.exitCode = 1;
+    out(checks.map(c => `${c.ok ? 'ok  ' : c.warn ? 'warn' : 'FAIL'}  ${c.name} — ${c.detail}`).join('\n'), { checks });
+    if (checks.some(c => !c.ok && !c.warn)) process.exitCode = 1;
   }));
 
 const daemon = program.command('daemon').description('manage the background daemon');

@@ -91,6 +91,24 @@ describe('Orchestrator', () => {
     await waitFor(() => starts >= 3, 10000);          // with maxRetries=1 a third run is only possible if the counter was reset
   });
 
+  it('re-probes an adopted service so it becomes ready again and up() does not hang (daemon restart)', async () => {
+    const port = await getFreePort();
+    const file = writeCfg('adopt', { project: 'adopt', services: { s: {
+      command: `node ${fx('echo-server.mjs')}`, port, health: { type: 'tcp', port, intervalMs: 50 } } } });
+    orch.registerProject(file);
+    await orch.up('adopt', human);
+    await pm.shutdown({ killChildren: false });                                    // the daemon exits, the service keeps running
+    const pm2 = new ProcessManager({ stateFile: new StateFile(join(dir, 'state.json')), logsDir: join(dir, 'logs') });
+    const orch2 = new Orchestrator({ pm: pm2, audit: new AuditLog(join(dir, 'audit2.log')) });
+    pm2.adoptAll();
+    orch2.registerProject(file);                                                    // what the new daemon does on boot
+    await waitFor(() => pm2.status('adopt/s')[0]?.state === 'ready', 5000);
+    const t0 = Date.now();
+    expect((await orch2.up('adopt', human))[0]!.state).toBe('ready');              // must return immediately, not wait for a timeout
+    expect(Date.now() - t0).toBeLessThan(2000);
+    await orch2.stopService('adopt/s', human); orch2.dispose(); await pm2.shutdown({ killChildren: true });
+  });
+
   it('does not restart after a user stop', async () => {
     orch.registerProject(writeCfg('e', { project: 'e', services: { s: {
       command: `node ${fx('echo-server.mjs')}`, restart: { policy: 'always', maxRetries: 5, backoffMs: 100 } } } }));

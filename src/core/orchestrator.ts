@@ -28,6 +28,7 @@ export class Orchestrator extends EventEmitter {
   private projects = new Map<string, ProjectConfig>();
   private attempts = new Map<string, number>();
   private restartTimers = new Map<string, NodeJS.Timeout>();
+  private probing = new Set<string>();
   private stableTimers = new Map<string, NodeJS.Timeout>();
   private metrics = new Map<string, { at: number; v: Sample | null }>();
   private stableMs: number;
@@ -50,9 +51,25 @@ export class Orchestrator extends EventEmitter {
     const cfg = loadConfig(configFile);
     startOrder(cfg);                                     // fail early on cycles / unknown dependencies
     this.projects.set(cfg.project, cfg);
-    for (const [name, svc] of Object.entries(cfg.services)) this.deps.pm.attachConfig(`${cfg.project}/${name}`, svc);
+    for (const [name, svc] of Object.entries(cfg.services)) {
+      const id = `${cfg.project}/${name}`;
+      this.deps.pm.attachConfig(id, svc);
+      if (this.deps.pm.status(id)[0]?.state === 'running') this.probe(id);   // adopted after a daemon restart: check readiness again
+    }
     this.saveRegistry();
     return cfg;
+  }
+
+  /** Run the readiness probe for a live service that is not yet ready (once at a time per service). */
+  private probe(id: string) {
+    const { cfg } = this.svc(id);
+    const log = this.deps.pm.logs(id);
+    if (!log || this.probing.has(id)) return;
+    this.probing.add(id);
+    const live = () => LIVE.includes(this.deps.pm.status(id)[0]?.state ?? '');
+    void waitUntilReady(cfg.health, { log, isAlive: live })
+      .then(r => this.deps.pm.markReady(id, r))
+      .finally(() => this.probing.delete(id));
   }
   private saveRegistry() {
     const f = this.deps.registryFile; if (!f) return;
@@ -97,9 +114,7 @@ export class Orchestrator extends EventEmitter {
     this.deps.audit.record(actor, 'start', id);
     const st = await this.deps.pm.start(id, project, name, cfg);
     this.deps.pm.setRestarts(id, this.attempts.get(id) ?? 0);
-    const live = () => LIVE.includes(this.deps.pm.status(id)[0]?.state ?? '');
-    void waitUntilReady(cfg.health, { log: this.deps.pm.logs(id)!, isAlive: live })
-      .then(r => this.deps.pm.markReady(id, r));
+    this.probe(id);
     return st;
   }
   async stopService(id: string, actor: Actor) {
@@ -155,6 +170,7 @@ export class Orchestrator extends EventEmitter {
       const s = cfg.services[name]!;
       const existing = this.deps.pm.status(id)[0];
       if (!existing || !LIVE.includes(existing.state)) await this.startService(id, actor, opts);
+      else if (existing.state === 'running') this.probe(id);
       const final = await this.settle(id, (s.health?.timeoutMs ?? 0) + 5000);
       if (final.state !== 'ready') throw new Error(`${id} failed: ${final.lastError ?? final.state}`);
       result.push(final);

@@ -66,6 +66,10 @@ describe('CLI e2e', () => {
     const o = ok(['ui', '--no-open']);
     expect(o).toContain(`http://127.0.0.1:${port}/#token=`); expect(existsSync(join(home, 'token'))).toBe(true);
   });
+  it('doctor shows warn (not FAIL) for normal states and exits 0 without a config', () => {
+    const empty = mkdtempSync(join(tmpdir(), 'gc-doc-')); const r = gc(['doctor'], empty);
+    expect(r.stdout).toMatch(/warn\s+groundcontrol\.json/); expect(r.stdout).not.toMatch(/FAIL/); expect(r.status).toBe(0);
+  });
   it('unknown project directory gives a helpful error', () => {
     const empty = mkdtempSync(join(tmpdir(), 'gc-empty-')); const r = gc(['start'], empty);
     expect(r.status).toBe(1); expect(r.stderr).toContain('groundcontrol init');

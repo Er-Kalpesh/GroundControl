@@ -67,6 +67,9 @@ describe('daemon e2e', () => {
     const after = await c2.services('demo');
     expect(after.map(s => s.pid)).toEqual(before);                                  // …and adopts the same pids
     expect(after.every(s => ['running', 'ready'].includes(s.state))).toBe(true);
+    const again = await c2.up('demo');                                              // `groundcontrol start` after a daemon restart must not hang
+    expect(again.map(s => s.state)).toEqual(['ready', 'ready']);
+    expect(again.map(s => s.pid)).toEqual(before);                                  // and must not respawn anything
     expect((await fetch(`http://127.0.0.1:${after[0]!.port}/`)).status).toBe(200);   // service still answers
   });
   it('streams logs over SSE', async () => {

@@ -1,0 +1,23 @@
+name: Release
+# Push a tag like v0.1.0 to build the package and attach the installable tarball to a GitHub Release.
+# Publishing to npm stays a manual step (see docs/RELEASING.md).
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: sudo apt-get update && sudo apt-get install -y lsof procps
+      - run: npm ci && npm --prefix dashboard ci
+      - run: npm run typecheck && npm test && npm --prefix dashboard test
+      - run: npm run build
+      - run: npm pack
+      - name: Create the GitHub release with the tarball attached
+        env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+        run: gh release create "$GITHUB_REF_NAME" groundcontrol-mcp-*.tgz --generate-notes

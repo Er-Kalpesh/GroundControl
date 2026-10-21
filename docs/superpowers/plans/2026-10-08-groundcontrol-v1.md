@@ -4982,6 +4982,7 @@ Decisions already made (do not re-litigate; change only with a recorded reason):
 Deviations recorded during execution (append here; format `date, task, what, why`):
 
 - 2026-10-21, release prep: minimum Node raised from 20 to 22.12. `commander@15` (a runtime dependency) and `vitest@5`/`jsdom@30` require Node >= 22.12, CI failed on Node 20, and Node 20 is end-of-life. Updated `package.json` engines, `tsup` target, `doctor`, README and the CI matrix (22, 24). Earlier mentions of Node 20 in this plan are superseded.
+- 2026-10-21, install testing: (1) `npm install github:...` cannot work because `dist/` is not committed; a `prepare` build script was tried and abandoned (npx inside a *global* npm install fails with ENOENT), so distribution is the npm registry or a release tarball built by `.github/workflows/release.yml`. (2) Bug found by running the installed package: after a daemon restart, adopted services stayed `running`, so `groundcontrol start` waited 65 s and failed. `Orchestrator` now re-probes adopted services (`probe()`), with a regression test in `orchestrator.test.ts` and a stronger HEADLINE assertion in `daemon.e2e.test.ts`. (3) `doctor` reports `warn` instead of `FAIL` for normal states (daemon not started, no config in the folder). Test counts are now 152 (orchestrator 13, cli e2e 8).
 
 ## Appendix E: Command cheat-sheet
 

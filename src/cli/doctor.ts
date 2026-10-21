@@ -5,7 +5,8 @@ import { findConfig, loadConfig } from '../config/load.js';
 import { isPortFree } from '../core/ports.js';
 import type { GcClient } from '../client/http-client.js';
 
-export interface Check { name: string; ok: boolean; detail: string }
+/** `warn` marks a state that is normal and does not make doctor fail (daemon not started yet, no config in this folder). */
+export interface Check { name: string; ok: boolean; detail: string; warn?: boolean }
 const has = (cmd: string, args: string[]) => { try { execFileSync(cmd, args, { stdio: 'ignore' }); return true; } catch { return false; } };
 
 /** Environment diagnostics. `client` may be null when the daemon is not running. */
@@ -20,9 +21,9 @@ export async function runDoctor(cwd: string, client: GcClient | null, daemonUp: 
     const mode = statSync(p.token).mode & 0o777;
     out.push({ name: 'token file mode 0600', ok: mode === 0o600, detail: `${p.token} is ${mode.toString(8)}` });
   }
-  out.push({ name: 'daemon reachable', ok: daemonUp, detail: daemonUp ? 'running' : 'not running (it starts automatically on first use)' });
+  out.push({ name: 'daemon reachable', ok: daemonUp, warn: !daemonUp, detail: daemonUp ? 'running' : 'not running (it starts automatically on first use)' });
   const cfgFile = findConfig(cwd);
-  if (!cfgFile) { out.push({ name: 'groundcontrol.json', ok: false, detail: `none found from ${cwd}; run "groundcontrol init"` }); return out; }
+  if (!cfgFile) { out.push({ name: 'groundcontrol.json', ok: false, warn: true, detail: `none found from ${cwd}; run "groundcontrol init" in your project` }); return out; }
   try {
     const cfg = loadConfig(cfgFile);
     out.push({ name: 'groundcontrol.json valid', ok: true, detail: `${cfgFile} (${Object.keys(cfg.services).length} services)` });

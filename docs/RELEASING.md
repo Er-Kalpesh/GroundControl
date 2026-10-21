@@ -30,7 +30,10 @@ The repository root already is a plugin *and* a one-plugin marketplace (`.claude
 
 Validate locally before every release: `claude plugin validate .` (checks the marketplace) and `claude plugin validate .claude-plugin/plugin.json`.
 
-## 3. Tag the release
+## 3. Tag the release (this also builds the no-npm download)
+
+Pushing a tag that starts with `v` runs `.github/workflows/release.yml`: it runs all tests, builds the package and attaches `groundcontrol-mcp-<version>.tgz` to a GitHub Release. Friends can then install with `npm install -g <release asset URL>` even before (or without) an npm publish.
+
 
 ```bash
 npm version patch               # bumps package.json and tags
